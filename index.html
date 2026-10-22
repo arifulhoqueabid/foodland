@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foodland | Secure Ledger</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Hind Siliguri', sans-serif; }
+        body { background-color: #f4f7f6; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        
+        .ledger-card { background: white; width: 100%; max-width: 450px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); overflow: hidden; }
+        .header { background-color: #d32f2f; color: white; padding: 20px; text-align: center; }
+        .header h2 { font-size: 24px; font-weight: 700; margin-bottom: 5px; }
+        .header p { font-size: 14px; color: #ffca28; font-weight: 600; }
+        
+        .form-body { padding: 25px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #444; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+        
+        .cash-result { background: #e8f5e9; border: 1px solid #a5d6a7; padding: 15px; border-radius: 6px; text-align: center; margin-bottom: 20px; }
+        .cash-result h3 { color: #2e7d32; font-size: 18px; margin-bottom: 5px; }
+        .cash-result .amount { font-size: 24px; font-weight: 700; color: #1b5e20; }
+        
+        .btn-submit { background-color: #d32f2f; color: white; padding: 15px; width: 100%; font-size: 18px; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; transition: 0.3s; }
+        .btn-submit:hover { background-color: #b71c1c; }
+        
+        .status-msg { text-align: center; margin-top: 15px; font-weight: 600; display: none; }
+        .success { color: #2e7d32; }
+        .loading { color: #f57c00; }
+    </style>
+</head>
+<body>
+
+    <div class="ledger-card">
+        <div class="header">
+            <h2>Foodland Restaurant</h2>
+            <p>দৈনিক হিসাব খাতা (Secure)</p>
+        </div>
+        
+        <form class="form-body" id="ledger-form">
+            <div class="form-group">
+                <label>আজকের মোট ইনকাম (৳):</label>
+                <input type="number" id="income" name="income" placeholder="0" onkeyup="calculateNet()" required>
+            </div>
+            
+            <div class="form-group">
+                <label>আজকের মোট খরচ (৳):</label>
+                <input type="number" id="expense" name="expense" placeholder="0" onkeyup="calculateNet()">
+            </div>
+            
+            <div class="form-group">
+                <label>খরচের বিবরণ:</label>
+                <textarea id="details" name="details" rows="2" placeholder="যেমন: বাজার, বিদ্যুৎ বিল..."></textarea>
+            </div>
+            
+            <div class="cash-result">
+                <h3>দিনশেষে ক্যাশ</h3>
+                <div class="amount" id="net-display">০ ৳</div>
+                <input type="hidden" id="net" name="net" value="0">
+            </div>
+            
+            <button type="submit" class="btn-submit" id="submit-btn">হিসাব সেভ করুন</button>
+            <div class="status-msg" id="status-msg"></div>
+        </form>
+    </div>
+
+    <script>
+        // আপনার কপি করা Web App URL টি এখানে দিন
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJ_497iMUr6CM9OvV1JY4stxB-5bfirsmVfhA7Bh_qydohkBRGVfgNJsiq1GXwStPQ2w/exec"; 
+
+        function calculateNet() {
+            let income = parseFloat(document.getElementById('income').value) || 0;
+            let expense = parseFloat(document.getElementById('expense').value) || 0;
+            let netCash = income - expense;
+            
+            document.getElementById('net-display').innerText = netCash + " ৳";
+            document.getElementById('net').value = netCash;
+        }
+
+        document.getElementById('ledger-form').addEventListener('submit', function(e) {
+            e.preventDefault(); // পেজ রিলোড বন্ধ করা
+            
+            let submitBtn = document.getElementById('submit-btn');
+            let statusMsg = document.getElementById('status-msg');
+            
+            // বাটনের অবস্থা পরিবর্তন
+            submitBtn.innerText = "সেভ হচ্ছে...";
+            submitBtn.disabled = true;
+            statusMsg.className = "status-msg loading";
+            statusMsg.innerText = "গুগল ডকসে ডেটা পাঠানো হচ্ছে...";
+            statusMsg.style.display = "block";
+
+            let formData = new FormData(this);
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors", // CORS এরর এড়ানোর জন্য
+                body: formData
+            }).then(() => {
+                // সফল হলে
+                submitBtn.innerText = "হিসাব সেভ করুন";
+                submitBtn.disabled = false;
+                statusMsg.className = "status-msg success";
+                statusMsg.innerText = "✅ হিসাব সফলভাবে সেভ হয়েছে!";
+                
+                // ফর্ম ক্লিয়ার করা
+                document.getElementById('ledger-form').reset();
+                calculateNet();
+                
+                setTimeout(() => { statusMsg.style.display = "none"; }, 4000);
+            }).catch(error => {
+                submitBtn.innerText = "হিসাব সেভ করুন";
+                submitBtn.disabled = false;
+                statusMsg.style.color = "red";
+                statusMsg.innerText = "❌ কোনো সমস্যা হয়েছে, আবার চেষ্টা করুন।";
+            });
+        });
+    </script>
+</body>
+</html>
