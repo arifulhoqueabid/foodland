@@ -2,121 +2,848 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Foodland | Secure Ledger</title>
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>গুণবতী ফুডল্যান্ড - ক্যাশ লেজার</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Hind Siliguri', sans-serif; }
-        body { background-color: #f4f7f6; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        
-        .ledger-card { background: white; width: 100%; max-width: 450px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); overflow: hidden; }
-        .header { background-color: #d32f2f; color: white; padding: 20px; text-align: center; }
-        .header h2 { font-size: 24px; font-weight: 700; margin-bottom: 5px; }
-        .header p { font-size: 14px; color: #ffca28; font-weight: 600; }
-        
-        .form-body { padding: 25px; }
-        .form-group { margin-bottom: 18px; }
-        .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #444; }
-        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
-        
-        .cash-result { background: #e8f5e9; border: 1px solid #a5d6a7; padding: 15px; border-radius: 6px; text-align: center; margin-bottom: 20px; }
-        .cash-result h3 { color: #2e7d32; font-size: 18px; margin-bottom: 5px; }
-        .cash-result .amount { font-size: 24px; font-weight: 700; color: #1b5e20; }
-        
-        .btn-submit { background-color: #d32f2f; color: white; padding: 15px; width: 100%; font-size: 18px; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; transition: 0.3s; }
-        .btn-submit:hover { background-color: #b71c1c; }
-        
-        .status-msg { text-align: center; margin-top: 15px; font-weight: 600; display: none; }
-        .success { color: #2e7d32; }
-        .loading { color: #f57c00; }
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --primary: #f97316;
+            --primary-hover: #ea580c;
+            --success: #10b981;
+            --danger: #ef4444;
+            --accent: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Hind Siliguri', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+
+        button, input {
+            touch-action: manipulation;
+        }
+
+        /* ================= PIN LOCK OVERLAY ================= */
+        #pinOverlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .pin-box {
+            background: #1e293b;
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 28px 22px;
+            width: 100%;
+            max-width: 370px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        }
+
+        .pin-logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), #fb923c);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin: 0 auto 12px;
+            box-shadow: 0 8px 20px rgba(249, 115, 22, 0.35);
+        }
+
+        .pin-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .pin-subtitle {
+            color: var(--text-muted);
+            font-size: 13.5px;
+            margin-bottom: 16px;
+        }
+
+        /* Direct PIN Input Box for PC & Mobile Keyboard */
+        .pin-direct-input {
+            width: 100%;
+            background: #0f172a;
+            border: 2px solid var(--primary);
+            color: var(--text-main);
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 14px;
+            text-align: center;
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            outline: none;
+        }
+
+        .pin-direct-input::placeholder {
+            color: #475569;
+            letter-spacing: 10px;
+        }
+
+        .pin-keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .pin-btn {
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            font-size: 20px;
+            font-weight: 700;
+            padding: 14px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s, transform 0.1s;
+        }
+
+        .pin-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .pin-btn:active {
+            background: var(--primary);
+            border-color: var(--primary);
+            transform: scale(0.96);
+        }
+
+        .btn-unlock {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: #fff;
+            border: none;
+            padding: 13px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.35);
+        }
+
+        .pin-error {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 10px;
+            min-height: 20px;
+            font-weight: 600;
+        }
+
+        /* ================= MAIN CONTAINER ================= */
+        .container {
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 16px;
+            display: none;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 16px 20px;
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .brand-title {
+            font-size: 21px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .brand-sub {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            background: #0f172a;
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .btn-small:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 16px;
+            border-radius: 14px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 23px;
+            font-weight: 700;
+        }
+
+        .val-green { color: var(--success); }
+        .val-red { color: var(--danger); }
+        .val-orange { color: var(--primary); }
+        .val-blue { color: var(--accent); }
+
+        /* Card & Graph Section */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .chart-filters {
+            display: flex;
+            background: #0f172a;
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--card-border);
+        }
+
+        .filter-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 280px;
+            width: 100%;
+        }
+
+        /* Form & One-Tap Expense */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .input-field {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary);
+        }
+
+        .section-subtitle {
+            font-size: 14.5px;
+            font-weight: 600;
+            margin: 16px 0 10px;
+            color: var(--accent);
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .preset-item {
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .preset-item:focus-within {
+            border-color: var(--primary);
+        }
+
+        .preset-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .preset-input {
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .custom-expense-box {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px dashed var(--card-border);
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .custom-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .custom-row .input-field {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .btn-add-custom {
+            background: var(--accent);
+            color: #0f172a;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .added-custom-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .custom-tag {
+            background: #1e293b;
+            border: 1px solid var(--accent);
+            color: var(--text-main);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .custom-tag span {
+            color: var(--danger);
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .live-preview {
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .btn-save {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: #fff;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.3);
+        }
+
+        /* History List */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .history-item {
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .history-date {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--primary);
+        }
+
+        .history-sub {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-top: 3px;
+            max-width: 480px;
+        }
+
+        .history-numbers {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .h-stat {
+            text-align: right;
+        }
+
+        .h-stat small {
+            display: block;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .btn-del {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* Docs Banner */
+        .docs-banner {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid var(--accent);
+            border-radius: 16px;
+            padding: 22px;
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .docs-banner h3 {
+            font-size: 18px;
+            margin-bottom: 6px;
+        }
+
+        .docs-banner p {
+            font-size: 13.5px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .btn-docs {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #2563eb, #0284c7);
+            color: #fff;
+            text-decoration: none;
+            padding: 13px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+        }
+
+        /* Modal */
+        #settingsModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100000;
+            padding: 16px;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        @media (max-width: 600px) {
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-value { font-size: 19px; }
+            .chart-wrapper { height: 220px; }
+            .history-numbers { width: 100%; justify-content: space-between; }
+            .custom-row . btn-add-custom { width: 100%; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="ledger-card">
-        <div class="header">
-            <h2>Foodland Restaurant</h2>
-            <p>দৈনিক হিসাব খাতা (Secure)</p>
+    <!-- ================= 1. PIN LOCK SCREEN (4444) ================= -->
+    <div id="pinOverlay">
+        <div class="pin-box">
+            <div class="pin-logo">🍽️</div>
+            <div class="pin-title">গুণবতী ফুডল্যান্ড</div>
+            <div class="pin-subtitle">পিন বক্সে টাইপ করুন অথবা নিচের বাটন চাপুন</div>
+
+            <!-- Direct Input Box (Works on Phone & PC Keyboard) -->
+            <input type="password" id="pinInput" class="pin-direct-input" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
+
+            <!-- On-Screen Keypad -->
+            <div class="pin-keypad">
+                <button type="button" class="pin-btn" onclick="handleKeypad('1')">1</button>
+                <button type="button" class="pin-btn" onclick="handleKeypad('2')">2</button>
+                <button type="button" class="pin-btn" onclick="handleKeypad('3')">3</button>
+                <button type="button" class="pin-btn" onclick="handleKeypad('4')">4</button>
+                <button type="button" class="pin-btn" onclick="handleKeypad('5')">5</button>
+                <button type="button" class="pin-btn" onclick="handleKeypad('6')">6</button>
+                <button type="button" class="pin-btn" onclick="handleKeypad('7')">7</button>
+                <button type="button" class="pin-btn" onclick="handleKeypad('8')">8</button>
+                <button type="button" class="pin-btn" onclick="handleKeypad('9')">9</button>
+                <button type="button" class="pin-btn" onclick="handleKeypad('C')">C</button>
+                <button type="button" class="pin-btn" onclick="handleKeypad('0')">0</button>
+                <button type="button" class="pin-btn" onclick="handleKeypad('B')">⌫</button>
+            </div>
+
+            <button type="button" class="btn-unlock" onclick="checkPinNow()">🔓 প্রবেশ করুন</button>
+            <div class="pin-error" id="pinError"></div>
         </div>
-        
-        <form class="form-body" id="ledger-form">
-            <div class="form-group">
-                <label>আজকের মোট ইনকাম (৳):</label>
-                <input type="number" id="income" name="income" placeholder="0" onkeyup="calculateNet()" required>
-            </div>
-            
-            <div class="form-group">
-                <label>আজকের মোট খরচ (৳):</label>
-                <input type="number" id="expense" name="expense" placeholder="0" onkeyup="calculateNet()">
-            </div>
-            
-            <div class="form-group">
-                <label>খরচের বিবরণ:</label>
-                <textarea id="details" name="details" rows="2" placeholder="যেমন: বাজার, বিদ্যুৎ বিল..."></textarea>
-            </div>
-            
-            <div class="cash-result">
-                <h3>দিনশেষে ক্যাশ</h3>
-                <div class="amount" id="net-display">০ ৳</div>
-                <input type="hidden" id="net" name="net" value="0">
-            </div>
-            
-            <button type="submit" class="btn-submit" id="submit-btn">হিসাব সেভ করুন</button>
-            <div class="status-msg" id="status-msg"></div>
-        </form>
     </div>
 
-    <script>
-        // আপনার কপি করা Web App URL টি এখানে দিন
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJ_497iMUr6CM9OvV1JY4stxB-5bfirsmVfhA7Bh_qydohkBRGVfgNJsiq1GXwStPQ2w/exec"; 
+    <!-- ================= MAIN DASHBOARD ================= -->
+    <div class="container" id="mainApp">
+        
+        <div class="header">
+            <div>
+                <div class="brand-title">🍛 গুণবতী ফুডল্যান্ড (ক্যাশ লেজার)</div>
+                <div class="brand-sub">পিসি ও মোবাইল ড্যাশবোর্ড</div>
+            </div>
+            <div class="header-actions">
+                <button type="button" class="btn-small" onclick="openSettings()">⚙️ স্ক্রিপ্ট লিংক</button>
+                <button type="button" class="btn-small" onclick="lockApp()">🔒 লক করুন</button>
+            </div>
+        </div>
 
-        function calculateNet() {
-            let income = parseFloat(document.getElementById('income').value) || 0;
-            let expense = parseFloat(document.getElementById('expense').value) || 0;
-            let netCash = income - expense;
-            
-            document.getElementById('net-display').innerText = netCash + " ৳";
-            document.getElementById('net').value = netCash;
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+            <div class="stat-card">
+                <div class="stat-label">আজকের মোট বিক্রি (ইনকাম)</div>
+                <div class="stat-value val-green" id="cardTodayIncome">৳ ০</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">আজকের মোট খরচ</div>
+                <div class="stat-value val-red" id="cardTodayExpense">৳ ০</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">আজকের নিট ক্যাশ (হাতে)</div>
+                <div class="stat-value val-orange" id="cardTodayNet">৳ ০</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">এই মাসের মোট নিট ক্যাশ</div>
+                <div class="stat-value val-blue" id="cardMonthNet">৳ ০</div>
+            </div>
+        </div>
+
+        <!-- ================= 2. TOP SINGLE GRAPH CHART ================= -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">📈 প্রতিদিনের ইনকাম ও নিট ক্যাশ গ্রাফ</div>
+                <div class="chart-filters">
+                    <button type="button" class="filter-btn active" id="btn7Days" onclick="changeChartRange(7)">গত ৭ দিন</button>
+                    <button type="button" class="filter-btn" id="btn30Days" onclick="changeChartRange(30)">গত ৩০ দিন</button>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="incomeChart"></canvas>
+            </div>
+        </div>
+
+        <!-- ================= 3. DAILY ENTRY & ONE-TAP EXPENSES ================= -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">📝 আজকের হিসাব এন্ট্রি করুন</div>
+            </div>
+
+            <div class="form-grid">
+                <div class="input-group">
+                    <label>তারিখ নির্বাচন করুন</label>
+                    <input type="date" id="entryDate" class="input-field">
+                </div>
+                <div class="input-group">
+                    <label>ওপেনিং ক্যাশ (শুরুতে ক্যাশে যা ছিল)</label>
+                    <input type="number" id="openingCash" class="input-field" inputmode="decimal" placeholder="০" oninput="calculateLive()">
+                </div>
+                <div class="input-group">
+                    <label>আজকের মোট বিক্রি / ইনকাম (৳)</label>
+                    <input type="number" id="totalSales" class="input-field" inputmode="decimal" placeholder="যেমন: ১৫০০০" oninput="calculateLive()">
+                </div>
+            </div>
+
+            <div class="section-subtitle">⚡ ওয়ান-ট্যাপ রেস্টুরেন্ট খরচের চার্ট (শুধু টাকার পরিমাণ লিখুন)</div>
+            <div class="preset-grid" id="presetContainer"></div>
+
+            <!-- Custom 'Other' Expense Option -->
+            <div class="section-subtitle">➕ অন্যান্য খরচ (টাইপ করে যোগ করুন)</div>
+            <div class="custom-expense-box">
+                <div class="custom-row">
+                    <input type="text" id="otherItemName" class="input-field" placeholder="খরচের নাম (যেমন: বরফ, মেরামত, ডেলিভারি)">
+                    <input type="number" id="otherItemAmount" class="input-field" inputmode="decimal" placeholder="টাকার পরিমাণ (৳)">
+                    <button type="button" class="btn-add-custom" onclick="addCustomExpense()">+ যোগ করুন</button>
+                </div>
+                <div class="added-custom-list" id="customTagsList"></div>
+            </div>
+
+            <!-- Live Calculation Bar -->
+            <div class="live-preview">
+                <div>মোট ইনকাম (ওপেনিংসহ): <strong class="val-green" id="liveTotalIn">৳ ০</strong></div>
+                <div>মোট খরচ: <strong class="val-red" id="liveTotalOut">৳ ০</strong></div>
+                <div>হাতে থাকা নিট ক্যাশ: <strong class="val-orange" id="liveNetCash">৳ ০</strong></div>
+            </div>
+
+            <button type="button" class="btn-save" id="saveBtn" onclick="saveDailyEntry()">💾 আজকের হিসাব সেভ করুন (চার্ট ও Google Docs)</button>
+        </div>
+
+        <!-- ================= 4. DAILY HISTORY LIST (NO GRAPH) ================= -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">📋 প্রতিদিনের হিসাবের তালিকা</div>
+            </div>
+            <div class="history-list" id="historyList"></div>
+        </div>
+
+        <!-- ================= 5. SINGLE LINK GOOGLE DOCS VIEWER ================= -->
+        <div class="docs-banner">
+            <h3>📄 গুগল ডকসে সংরক্ষিত বিস্তারিত লেজার</h3>
+            <p>এক ক্লিকেই আপনার রেস্টুরেন্টের মূল Google Docs হিসাব খাতা দেখুন।</p>
+            <a href="https://docs.google.com/document/d/15n7XxJQZDqiq0TMVaXMeXpb9aDpdtseUjV7LKhQU9ew/edit?usp=sharing" target="_blank" class="btn-docs">
+                📘 আপনার রেস্টুরেন্টের হিসাব দেখুন
+            </a>
+        </div>
+
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 8px;">⚙️ Google Docs অটো-সেভ লিংক</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+                আপনার Google Apps Script-এর Web App URL নিচে পেস্ট করে সেভ রাখলে প্রতিদিনের এন্ট্রি অটোমেটিক আপনার Google Docs-এ চলে যাবে।
+            </p>
+            <input type="text" id="scriptUrlInput" class="input-field" placeholder="https://script.google.com/macros/s/....../exec" style="margin-bottom: 14px;">
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn-small" onclick="closeSettings()">বন্ধ করুন</button>
+                <button type="button" class="btn-small" style="background: var(--primary); border-color: var(--primary); color:#fff;" onclick="saveScriptUrl()">সেভ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Chart.js safely -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // ================= SAFE STORAGE (Fixes local file:// bug in Chrome) =================
+        let memoryFallback = {};
+        const SafeStorage = {
+            getItem: function(key) {
+                try {
+                    return localStorage.getItem(key);
+                } catch (e) {
+                    return memoryFallback[key] || null;
+                }
+            },
+            setItem: function(key, val) {
+                try {
+                    localStorage.setItem(key, val);
+                } catch (e) {
+                    memoryFallback[key] = val;
+                }
+            }
+        };
+
+        // ================= CONFIGURATION =================
+        const SECRET_PIN = "4444";
+        const DEFAULT_SCRIPT_URL = "";
+
+        const PRESET_EXPENSES = [
+            { id: "meat", label: "🥩 মাংস ও চিকেন (চাপ/বার্গার)" },
+            { id: "veg", label: "🥬 কাঁচাবাজার ও সবজি" },
+            { id: "oil", label: "🛢️ তেল, ঘি ও মশলা" },
+            { id: "sauce", label: "🥫 সস, মেয়োনিজ ও চিজ" },
+            { id: "bakery", label: "🍞 বান, রুটি ও বেকারি" },
+            { id: "pack", label: "🥡 প্যাকেজিং, বক্স ও পলি" },
+            { id: "gas", label: "🔥 গ্যাস ও জ্বালানি" },
+            { id: "staff", label: "👨‍🍳 স্টাফ হাজিরা ও নাস্তা" },
+            { id: "utility", label: "💡 বিদ্যুৎ, ওয়াইফাই ও বিল" },
+            { id: "clean", label: "🧹 পরিষ্কার ও অন্যান্য বাজার" }
+        ];
+
+        let customExpenses = [];
+        let chartInstance = null;
+        let currentChartRange = 7;
+        let isDashboardInitialized = false;
+
+        // ================= PIN LOCK LOGIC (PC + MOBILE) =================
+        const pinInputEl = document.getElementById('pinInput');
+        const pinErrorEl = document.getElementById('pinError');
+
+        // Listen for direct typing in the input box
+        pinInputEl.addEventListener('input', function() {
+            pinErrorEl.innerText = "";
+            if (this.value.length === 4) {
+                checkPinNow();
+            }
+        });
+
+        pinInputEl.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                checkPinNow();
+            }
+        });
+
+        // Handle on-screen keypad clicks
+        function handleKeypad(key) {
+            pinErrorEl.innerText = "";
+            if (key === 'C') {
+                pinInputEl.value = "";
+            } else if (key === 'B') {
+                pinInputEl.value = pinInputEl.value.slice(0, -1);
+            } else {
+                if (pinInputEl.value.length < 4) {
+                    pinInputEl.value += key;
+                }
+            }
+            if (pinInputEl.value.length === 4) {
+                setTimeout(checkPinNow, 100);
+            }
         }
 
-        document.getElementById('ledger-form').addEventListener('submit', function(e) {
-            e.preventDefault(); // পেজ রিলোড বন্ধ করা
-            
-            let submitBtn = document.getElementById('submit-btn');
-            let statusMsg = document.getElementById('status-msg');
-            
-            // বাটনের অবস্থা পরিবর্তন
-            submitBtn.innerText = "সেভ হচ্ছে...";
-            submitBtn.disabled = true;
-            statusMsg.className = "status-msg loading";
-            statusMsg.innerText = "গুগল ডকসে ডেটা পাঠানো হচ্ছে...";
-            statusMsg.style.display = "block";
+        function checkPinNow() {
+            const val = pinInputEl.value.trim();
+            if (val === SECRET_PIN) {
+                document.getElementById('pinOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                if (!isDashboardInitialized) {
+                    initDashboard();
+                    isDashboardInitialized = true;
+                } else {
+                    renderAll();
+                }
+            } else {
+                pinErrorEl.innerText = "❌ ভুল পিন! সঠিক পিন ৪৪৪৪ দিন।";
+                pinInputEl.value = "";
+            }
+        }
 
-            let formData = new FormData(this);
+        function lockApp() {
+            pinInputEl.value = "";
+            pinErrorEl.innerText = "";
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('pinOverlay').style.display = 'flex';
+        }
 
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors", // CORS এরর এড়ানোর জন্য
-                body: formData
-            }).then(() => {
-                // সফল হলে
-                submitBtn.innerText = "হিসাব সেভ করুন";
-                submitBtn.disabled = false;
-                statusMsg.className = "status-msg success";
-                statusMsg.innerText = "✅ হিসাব সফলভাবে সেভ হয়েছে!";
-                
-                // ফর্ম ক্লিয়ার করা
-                document.getElementById('ledger-form').reset();
-                calculateNet();
-                
-                setTimeout(() => { statusMsg.style.display = "none"; }, 4000);
-            }).catch(error => {
-                submitBtn.innerText = "হিসাব সেভ করুন";
-                submitBtn.disabled = false;
-                statusMsg.style.color = "red";
-                statusMsg.innerText = "❌ কোনো সমস্যা হয়েছে, আবার চেষ্টা করুন।";
-            });
-        });
-    </script>
-</body>
-</html>
+        // ================= INITIALIZE DASHBOARD =================
+        function initDashboard() {
+            const today = new Date().toISOString().split('T')[0];
+            const dateInput = document.getElementById('entryDate');
+            dateInput.value = today;
+
+            renderPresets();
+            loadDateData(today);
+            renderAll();
+
+            dateInput.add
