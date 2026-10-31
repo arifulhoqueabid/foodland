@@ -551,7 +551,7 @@
                 </div>
             </div>
 
-            <button type="button" class="btn-save" id="saveBtn" onclick="saveToGoogleDocs()">💾 গুগল ডকসে আজকের হিসাব সেভ করুন</button>
+            <button type="button" class="btn-save" id="saveBtn" onclick="saveToGoogleDocs()">💾 হিসাব সেভ করুন</button>
         </div>
 
         <!-- গুগল ডকস লিংক বাটন -->
@@ -693,7 +693,7 @@
             };
 
             var saveBtn = document.getElementById('saveBtn');
-            saveBtn.innerText = "⏳ গুগল ডকসে সেভ হচ্ছে...";
+            saveBtn.innerText = "⏳ সেভ হচ্ছে...";
             saveBtn.disabled = true;
 
             try {
@@ -704,7 +704,7 @@
                     body: JSON.stringify(payload)
                 });
 
-                saveBtn.innerText = "✅ গুগল ডকসে সফলভাবে সেভ হয়েছে!";
+                saveBtn.innerText = "✅ সফলভাবে সেভ হয়েছে!";
                 
                 // ফর্ম রিসেট
                 document.getElementById('openingCash').value = "";
@@ -722,7 +722,7 @@
             }
 
             setTimeout(function() {
-                saveBtn.innerText = "💾 গুগল ডকসে আজকের হিসাব সেভ করুন";
+                saveBtn.innerText = "💾 আজকের হিসাব সেভ করুন";
                 saveBtn.disabled = false;
             }, 2500);
         }
